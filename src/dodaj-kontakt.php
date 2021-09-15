@@ -91,7 +91,7 @@ session_start();
           }
 
           $uploadOk = 1;
-          if (is_uploaded_file($_FILES["image"]["name"])) {
+          if (isset($_FILES["image"]["name"])) {
             $target_file = IMAGES_PATH . basename($_FILES["image"]["name"]);
 
             $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));

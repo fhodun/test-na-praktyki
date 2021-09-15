@@ -74,11 +74,11 @@ session_start();
                 echo ('<div class="alert alert-danger mb-5" role="alert">Błąd usuwania kontaktu z bazy danych: ' . $conn->error . '</div>');
               }
             } else if ($submit[0] == "zapisz") {
-              $target_dir = "images/";
-              $target_file = $target_dir . basename($_FILES["image"]["name"]);
               $uploadOk = 1;
-              $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-              if (!empty($_POST["image"])) {
+              if (is_uploaded_file($_FILES["image"]["name"])) {
+                $target_file = IMAGES_PATH . basename($_FILES["image"]["name"]);
+
+                $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
                 $check = getimagesize($_FILES["image"]["tmp_name"]);
                 if ($check != false) {
                   $uploadOk = 1;
@@ -86,14 +86,35 @@ session_start();
                   echo ('<div class="alert alert-danger mb-5" role="alert">File is not an image.</div>');
                   $uploadOk = 0;
                 }
+
+                if (file_exists($target_file)) {
+                  echo ('<div class="alert alert-danger mb-5" role="alert">Sorry, file already exists.</div>');
+                  $uploadOk = 0;
+                }
+
                 if (
                   $imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
                 ) {
                   echo ('<div class="alert alert-danger mb-5" role="alert">Sorry, only JPG, JPEG, PNG & GIF files are allowed.</div>');
                   $uploadOk = 0;
                 }
+                if ($uploadOk != 0) {
+                  $pliknazwa = basename($_FILES["image"]["name"]);
+                  $query_backwards = $query_backwards . ", '" . $pliknazwa . "'";
+                  $query = $query . ', image';
+                }
+              } else {
+                $uploadOk = 0;
               }
-              $query = "UPDATE contacts SET first_name = '" . $_POST["first_name"] . "', last_name = '" . $_POST["last_name"] . "', phone_number = '" . $_POST["phone_number"] . "', email = '" . $_POST["email"] . "', address = '" . $_POST["address"] . "', image = '" . basename($_FILES["image"]["name"]) . "' WHERE id = " . $submit[1];
+              if ($uploadOk != 0) {
+                $basename = basename($_FILES["image"]["name"]);
+                if (!move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                  echo ('<div class="alert alert-danger mb-5" role="alert">Wystąpił błąd przesyłania pliku.</div>');
+                }
+              } else {
+                $basename = null;
+              }
+              $query = "UPDATE contacts SET first_name = '" . $_POST["first_name"] . "', last_name = '" . $_POST["last_name"] . "', phone_number = '" . $_POST["phone_number"] . "', email = '" . $_POST["email"] . "', address = '" . $_POST["address"] . "', image = '" . $basename . "' WHERE id = " . $submit[1];
               if ($conn->query($query) == TRUE) {
                 echo ('<div class="alert alert-success mb-5" role="alert">Kontakt został pomyślnie zaaktualizowany.</div>');
               } else {
